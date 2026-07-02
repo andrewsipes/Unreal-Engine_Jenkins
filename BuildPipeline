@@ -1,0 +1,66 @@
+pipeline {
+    agent any
+    stages {
+        stage('Pull World Soul') {
+            steps {
+                ws('E:/WorldSoul'){
+                powershell '''
+                    if (!(Test-Path -Path 'E:/WorldSoul/WorldSoul'))
+                    {
+                        git clone -b develop https://<user>:<token>@github.com/WolfPackGameDesign/WorldSoul.git
+                    }
+                    else
+                    {
+                        cd 'E:/WorldSoul/WorldSoul'
+                        git fetch origin develop
+                        git checkout develop
+                        git pull origin develop
+                    } 
+                    '''
+                }
+            }
+        }
+        stage('Generate Project Files World Soul'){
+            steps {
+                ws('E:/WorldSoul')
+                {
+                    powershell '''
+                    E:\\UnrealEngine\\UE_5.5\\Engine\\Binaries\\DotNET\\UnrealBuildTool\\Unrealbuildtool.exe -projectfiles -project='E:\\WorldSoul\\WorldSoul\\WorldSoul.uproject' -game -rocket -progress
+                    '''
+
+                }
+            }
+        }
+        stage('Build World Soul'){
+            steps {
+                ws('E:/WorldSoul')
+                {
+                    powershell '''
+                    & "E:\\UnrealEngine\\UE_5.5\\Engine\\Build\\BatchFiles\\RunUAT.bat" `
+                    -ScriptsForProject="E:\\WorldSoul\\WorldSoul\\WorldSoul.uproject" `
+                    BuildCookRun `
+                    -nop4 `
+                    -utf8output `
+                    -cook `
+                    -project="E:\\WorldSoul\\WorldSoul\\WorldSoul.uproject" `
+                    -target=WorldSoul `
+                    -unrealexe="E:\\UnrealEngine\\UE_5.5\\Engine\\Binaries\\Win64\\UnrealEditor-Cmd.exe" `
+                    -platform=Win64 `
+                    -stage `
+                    -archive `
+                    -package `
+                    -build `
+                    -pak `
+                    -iostore `
+                    -compressed `
+                    -prereqs `
+                    -archivedirectory="E:\\WorldSoul\\temp\\Development" `
+                    -clientconfig=Development `
+                    -nocompileuat `
+                    -clean
+                    '''
+                }
+            }
+        }
+    }
+}
