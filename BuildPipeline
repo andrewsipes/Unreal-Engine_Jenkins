@@ -2,7 +2,6 @@ pipeline {
     agent any
     
       environment {
-        RCLONE_PATH = "C:\\"
         FOLDER_ID = ''
 		GITHUB_USER = ''
         GITHUB_TOKEN = ''
@@ -77,19 +76,29 @@ pipeline {
                 }
             }
         }
-        stage('Zip Build'){
+        stage('Zip Build and Upload To Google Drive'){
             steps {
                 ws(env.WS_PATH)
                 {
                     powershell '''
-                       
+                    $BuildName = "WorldSoul_Build_$(Get-Date -Format 'yyyyMMdd')_v0.1"   
                     compress-Archive `
                             -Path "$env:WS_PATH\\WorldSoul\\temp\\Development\\*" `
-                            -DestinationPath "$env:WS_PATH\\WorldSoul\\temp\\WS_BuildTest.zip" `
+                            -DestinationPath "$env:WS_PATH\\WorldSoul\\temp\\$BuildName.zip `
                             -Force
                     '''
                 }
             }
-        }             
+        }
+        stage('Upload To Google Drive'){
+            steps {
+                ws(env.WS_PATH)
+                {
+                    powershell '''
+                        rclone copy "$env:WS_PATH\\WorldSoul\\temp\\Development\\$BuildName.zip" "WS:" --drive-root-folder-id $env:FOLDER_ID               
+                    '''
+                }
+            }
+        }                       
     }
 }
