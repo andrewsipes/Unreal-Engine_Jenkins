@@ -1,17 +1,27 @@
 pipeline {
     agent any
+    
+      environment {
+        RCLONE_PATH = "C:\\"
+        FOLDER_ID = ''
+		GITHUB_USER = ''
+        GITHUB_TOKEN = ''
+        UE_PATH = 'E:\\UnrealEngine\\UE_5.5'
+        WS_PATH = 'E:\\WorldSoul'
+    }
+    
     stages {
         stage('Pull World Soul') {
             steps {
-                ws('E:/WorldSoul'){
+                ws(env.WS_PATH) {
                 powershell '''
-                    if (!(Test-Path -Path 'E:/WorldSoul/WorldSoul'))
+                    if (!(Test-Path -Path $env:WS_PATH\\WorldSoul\\))
                     {
-                        git clone -b develop https://<user>:<token>@github.com/WolfPackGameDesign/WorldSoul.git
+                        git clone -b develop https://$env:GITHUB_USER:$env:GITHUB_TOKEN@github.com/WolfPackGameDesign/WorldSoul.git
                     }
                     else
                     {
-                        cd 'E:/WorldSoul/WorldSoul'
+                        cd $env:WS_PATH\\WorldSoul
                         git fetch origin develop
                         git checkout develop
                         git pull origin develop
@@ -22,10 +32,15 @@ pipeline {
         }
         stage('Generate Project Files World Soul'){
             steps {
-                ws('E:/WorldSoul')
+                ws(env.WS_PATH)
                 {
                     powershell '''
-                    E:\\UnrealEngine\\UE_5.5\\Engine\\Binaries\\DotNET\\UnrealBuildTool\\Unrealbuildtool.exe -projectfiles -project='E:\\WorldSoul\\WorldSoul\\WorldSoul.uproject' -game -rocket -progress
+                    & "$env:UE_PATH\\Engine\\Binaries\\DotNET\\UnrealBuildTool\\Unrealbuildtool.exe" `
+                    -projectfiles `
+                    -project="$env:WS_PATH\\WorldSoul\\WorldSoul.uproject" `
+                    -game `
+                    -rocket `
+                    -progress
                     '''
 
                 }
@@ -33,18 +48,18 @@ pipeline {
         }
         stage('Build World Soul'){
             steps {
-                ws('E:/WorldSoul')
+                ws(env.WS_PATH)
                 {
                     powershell '''
-                    & "E:\\UnrealEngine\\UE_5.5\\Engine\\Build\\BatchFiles\\RunUAT.bat" `
-                    -ScriptsForProject="E:\\WorldSoul\\WorldSoul\\WorldSoul.uproject" `
+                    & "$env:UE_PATH\\Engine\\Build\\BatchFiles\\RunUAT.bat" `
+                    -ScriptsForProject="$env:WS_PATH\\WorldSoul\\WorldSoul.uproject" `
                     BuildCookRun `
                     -nop4 `
                     -utf8output `
                     -cook `
-                    -project="E:\\WorldSoul\\WorldSoul\\WorldSoul.uproject" `
+                    -project="$env:WS_PATH\\WorldSoul\\WorldSoul.uproject" `
                     -target=WorldSoul `
-                    -unrealexe="E:\\UnrealEngine\\UE_5.5\\Engine\\Binaries\\Win64\\UnrealEditor-Cmd.exe" `
+                    -unrealexe="$env:UE_PATH\\Engine\\Binaries\\Win64\\UnrealEditor-Cmd.exe" `
                     -platform=Win64 `
                     -stage `
                     -archive `
@@ -54,7 +69,7 @@ pipeline {
                     -iostore `
                     -compressed `
                     -prereqs `
-                    -archivedirectory="E:\\WorldSoul\\temp\\Development" `
+                    -archivedirectory="$env:WS_PATH\\WorldSoul\\temp\\Development" `
                     -clientconfig=Development `
                     -nocompileuat `
                     -clean
@@ -62,5 +77,19 @@ pipeline {
                 }
             }
         }
+        stage('Zip Build'){
+            steps {
+                ws(env.WS_PATH)
+                {
+                    powershell '''
+                       
+                    compress-Archive `
+                            -Path "$env:WS_PATH\\WorldSoul\\temp\\Development\\*" `
+                            -DestinationPath "$env:WS_PATH\\WorldSoul\\temp\\WS_BuildTest.zip" `
+                            -Force
+                    '''
+                }
+            }
+        }             
     }
 }
