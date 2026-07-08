@@ -2,13 +2,15 @@ pipeline {
     agent any
     
       environment {
+        RCLONE_CONFIG = "C:\\Users\\Administrator\\AppData\\Roaming\\rclone\\rclone.conf"
+        BUILD_NAME = "WorldSoul_Build_Develop_"
         FOLDER_ID = ''
-		GITHUB_USER = ''
+        GITHUB_USER = ''
         GITHUB_TOKEN = ''
         UE_PATH = 'E:\\UnrealEngine\\UE_5.5'
         WS_PATH = 'E:\\WorldSoul'
     }
-    
+
     stages {
         stage('Pull World Soul') {
             steps {
@@ -81,24 +83,22 @@ pipeline {
                 ws(env.WS_PATH)
                 {
                     powershell '''
-                    $BuildName = "WorldSoul_Build_$(Get-Date -Format 'yyyyMMdd')_v0.1"   
+                    $BuildName = "$env:BUILD_NAME$(Get-Date -Format 'yyyyMMdd')_v0.1"   
+                    
+                    whoami
+                    C:\\rclone.exe config file
                     compress-Archive `
                             -Path "$env:WS_PATH\\WorldSoul\\temp\\Development\\*" `
-                            -DestinationPath "$env:WS_PATH\\WorldSoul\\temp\\$BuildName.zip `
+                            -DestinationPath "$env:WS_PATH\\WorldSoul\\temp\\Development\\$BuildName.zip" `
                             -Force
+                    C:\\rclone.exe copy `
+                    "$env:WS_PATH\\WorldSoul\\temp\\Development\\$BuildName.zip" `
+                    "WS:" `
+                    --config $env:RCLONE_CONFIG `
+                    --drive-root-folder-id $env:FOLDER_ID
                     '''
                 }
             }
         }
-        stage('Upload To Google Drive'){
-            steps {
-                ws(env.WS_PATH)
-                {
-                    powershell '''
-                        rclone copy "$env:WS_PATH\\WorldSoul\\temp\\Development\\$BuildName.zip" "WS:" --drive-root-folder-id $env:FOLDER_ID               
-                    '''
-                }
-            }
-        }                       
     }
 }
