@@ -9,6 +9,9 @@ pipeline {
         GITHUB_TOKEN = ''
         UE_PATH = 'E:\\UnrealEngine\\UE_5.5'
         WS_PATH = 'E:\\WorldSoul'
+        INCR_MAJOR = 'false'
+        INCR_MINOR = 'false'
+        INCR_PATCH = 'true'
     }
 
     stages {
@@ -78,12 +81,62 @@ pipeline {
                 }
             }
         }
+        stage('Increment Build Version'){
+            steps {
+                ws(env.WS_PATH)
+                {
+                    powershell '''
+
+                    [bool]$incrMajor = [System.Convert]::ToBoolean($env:INCR_MAJOR)
+                    [bool]$incrMinor = [System.Convert]::ToBoolean($env:INCR_MINOR)
+                    [bool]$incrPatch = [System.Convert]::ToBoolean($env:INCR_PATCH)
+
+                    $BuildVersion = cat $env:WS_PATH\\WorldSoul\\BuildVersion.txt
+                    $BuildVersionArray = $BuildArray = $BuildVersion.Split()
+
+                    if($incrMajor)
+                    {
+                        $Major = [int]$BuildVersionArray[0] + [int]1
+                    }
+                    else
+                    {
+                        $Major = $BuildVersionArray[0] 
+                    }
+
+                    if($incrMinor)
+                    {
+                        $Minor = $BuildVersionArray[1] + [int]1
+                    }
+                    else
+                    {
+                        $Minor = $BuildVersionArray[1]
+                    }
+
+                    if($incrPatch)
+                    {
+                        $Patch = [int]$BuildVersionArray[2] + [int]1
+                    }
+                    else
+                    {
+                        $Patch = $BuildVersionArray[2]
+                    }
+
+                    $BuildVersion = $Major + '.' + $Minor + '.' + $Patch
+
+                    $BuildVersion > $env:WS_PATH\\WorldSoul\\BuildVersion.txt
+                   
+                    '''
+                }
+            }
+        }
+    
         stage('Zip Build and Upload To Google Drive'){
             steps {
                 ws(env.WS_PATH)
                 {
                     powershell '''
-                    $BuildName = "$env:BUILD_NAME$(Get-Date -Format 'yyyyMMdd')_v0.1"   
+                    $BuildVersion = cat $env:WS_PATH\\WorldSoul\\BuildVersion.txt
+                    $BuildName = "$env:BUILD_NAME$(Get-Date -Format 'yyyyMMdd')_$BuildVersion"   
                     
                     whoami
                     C:\\rclone.exe config file
