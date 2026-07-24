@@ -7,7 +7,7 @@ pipeline {
         FOLDER_ID = ''
         GITHUB_USER = ''
         GITHUB_TOKEN = ''
-        UE_PATH = 'E:\\UnrealEngine\\UE_5.5'
+        UE_PATH = 'E:\\Epic Games\\UE_5.8'
         WS_PATH = 'E:\\WorldSoul'
         INCR_MAJOR = 'false'
         INCR_MINOR = 'false'
@@ -92,7 +92,7 @@ pipeline {
                     [bool]$incrPatch = [System.Convert]::ToBoolean($env:INCR_PATCH)
 
                     $BuildVersion = cat $env:WS_PATH\\WorldSoul\\BuildVersion.txt
-                    $BuildVersionArray = $BuildArray = $BuildVersion.Split()
+                    $BuildVersionArray = $BuildVersion.Split('.')
 
                     if($incrMajor)
                     {
@@ -136,7 +136,7 @@ pipeline {
                 {
                     powershell '''
                     $BuildVersion = cat $env:WS_PATH\\WorldSoul\\BuildVersion.txt
-                    $BuildName = "$env:BUILD_NAME$(Get-Date -Format 'yyyyMMdd')_$BuildVersion"   
+                    $BuildName = "$env:BUILD_NAME$(Get-Date -Format 'yyyyMMdd')_$BuildVersion"    
                     
                     whoami
                     C:\\rclone.exe config file
