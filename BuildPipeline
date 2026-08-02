@@ -15,7 +15,7 @@ pipeline {
     }
 
     stages {
-        stage('Pull World Soul') {
+        stage('Pull Project') {
             steps {
                 ws(env.PROJ_PATH) {
                 powershell '''
@@ -34,9 +34,9 @@ pipeline {
                 }
             }
         }
-        stage('Generate Project Files World Soul'){
+        stage('Generate Project Files'){
             steps {
-                ws(env.WS_PATH)
+                ws(env.PROJ_PATH)
                 {
                     powershell '''
                     & "$env:UE_PATH\\Engine\\Binaries\\DotNET\\UnrealBuildTool\\Unrealbuildtool.exe" `
@@ -50,9 +50,9 @@ pipeline {
                 }
             }
         }
-        stage('Build World Soul'){
+        stage('Build'){
             steps {
-                ws(env.WS_PATH)
+                ws(env.PROJ_PATH)
                 {
                     powershell '''
                     & "$env:UE_PATH\\Engine\\Build\\BatchFiles\\RunUAT.bat" `
@@ -83,7 +83,7 @@ pipeline {
         }
         stage('Increment Build Version'){
             steps {
-                ws(env.WS_PATH)
+                ws(env.PROJ_PATH)
                 {
                     powershell '''
 
@@ -132,7 +132,7 @@ pipeline {
     
         stage('Zip Build and Upload To Google Drive'){
             steps {
-                ws(env.WS_PATH)
+                ws(env.PROJ_PATH)
                 {
                     powershell '''
                     $BuildVersion = cat $env:PROJ_PATH\\<folder name>\\BuildVersion.txt
