@@ -1,4 +1,7 @@
-# World Soul Jenkins Pipeline
+# Unreal Engine Jenkins Pipeline
+
+## Description
+This repo serves as a Unreal Engine Jenkins pipeline for a project I was involved in. The Repo can be replaced with any Unreal Engine Repo, although you may need to change .NET SDK or Unreal Engine version to make it compatible.
 
 ### How To Setup
 - Install Windows Server on a VM / Local Machine
